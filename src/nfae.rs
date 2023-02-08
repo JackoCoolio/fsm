@@ -8,7 +8,6 @@ where
     L: Copy + Clone,
 {
     start: Option<usize>,
-    finishes: Vec<usize>,
     states: Vec<State<S, MaybeEpsilonTransition<L>>>,
 }
 
@@ -18,11 +17,6 @@ where
 {
     pub fn set_start(&mut self, start: usize) -> &mut Self {
         self.start = Some(start);
-        self
-    }
-
-    pub fn add_finish(&mut self, finish: usize) -> &mut Self {
-        self.finishes.push(finish);
         self
     }
 
@@ -40,14 +34,10 @@ where
             return Err("DFA must have at least one state".into());
         }
 
-        if self.finishes.is_empty() {
-            return Err("DFA must have at least one finish".into());
-        }
+        let finish_count = self.states.iter().filter(|&st| st.is_finish()).count();
 
-        for &finish in self.finishes.iter() {
-            if finish >= self.states.len() {
-                return Err("finish index must be valid".into());
-            }
+        if finish_count == 0 {
+            return Err("DFA must have at least one finish".into());
         }
 
         if start >= self.states.len() {
@@ -56,10 +46,36 @@ where
 
         Ok(NFAe {
             start,
-            finishes: self.finishes,
             states: self.states,
         })
     }
+}
+
+impl<L, S> From<NFAe<L, S>> for NFAeBuilder<L, S> where L: Copy + Clone {
+    fn from(nfae: NFAe<L, S>) -> Self {
+        Self {
+            states: nfae.states,
+            start: Some(nfae.start),
+        }
+    }
+}
+
+#[test]
+fn test_nfae_builder() {
+    use crate::transition::RealTransition;
+
+    let mut builder = NFAeBuilder::default();
+
+    let mut start = State::new(false, ());
+    let finish = State::new(true, ());
+
+    builder.set_start(0);
+
+    start.add_transition(RealTransition::new('a', 1));
+
+    builder.add_state(start).add_state(finish);
+
+    builder.build().unwrap();
 }
 
 pub struct NFAe<L, S>
@@ -68,17 +84,12 @@ where
 {
     pub states: Vec<State<S, MaybeEpsilonTransition<L>>>,
     pub start: usize,
-    pub finishes: Vec<usize>,
 }
 
 impl<L, S> NFAe<L, S>
 where
     L: Copy + Clone,
 {
-    pub fn add_state(&mut self, start: bool, finish: bool, data: S) {
-        self.states.push(State::new(start, finish, data));
-    }
-
     pub fn get_state(&self, state: usize) -> Option<&State<S, MaybeEpsilonTransition<L>>> {
         self.states.get(state)
     }
@@ -192,7 +203,11 @@ where
                 .map(|st| st.try_into().unwrap())
                 .collect(),
             start: self.start,
-            finishes: self.finishes,
         }
     }
+}
+
+#[test]
+fn test_epsilon_closure() {
+
 }

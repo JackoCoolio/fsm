@@ -3,7 +3,6 @@ use crate::{state::State, transition::RealTransition, nfae::NFAe};
 pub struct NFA<L, S> {
     pub states: Vec<State<S, RealTransition<L>>>,
     pub start: usize,
-    pub finishes: Vec<usize>,
 }
 
 impl<L, S> From<NFAe<L, S>> for NFA<L, S>
