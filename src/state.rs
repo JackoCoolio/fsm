@@ -5,8 +5,6 @@ pub struct State<S, T> {
     pub data: S,
     /// The transitions from this state.
     pub transitions: Vec<T>,
-    /// Whether or not this state is a start state.
-    pub start: bool,
     /// Whether or not this state is a finish state.
     pub finish: bool,
 }
@@ -29,7 +27,6 @@ where
         Ok(State {
             data: value.data,
             transitions,
-            start: value.start,
             finish: value.finish,
         })
     }
@@ -43,7 +40,6 @@ where
         State {
             data: value.data,
             transitions: value.transitions.into_iter().map(|tr| tr.into()).collect(),
-            start: value.start,
             finish: value.finish,
         }
     }
@@ -54,21 +50,21 @@ where
     L: PartialEq,
 {
     /// Finds the state index that the given symbol transitions from this state to.
-    pub fn next(&self, symbol: &L) -> Option<usize> {
+    pub fn next(&self, symbol: &L) -> Vec<usize> {
         self.transitions
             .iter()
-            .find(|tr| tr.symbol() == symbol)
+            .filter(|tr| tr.symbol() == symbol)
             .map(|tr| tr.dest())
+            .collect()
     }
 }
 
 impl<S, T> State<S, T> {
     /// Creates a new State with the given internal data.
-    pub fn new(start: bool, finish: bool, data: S) -> Self {
+    pub fn new(finish: bool, data: S) -> Self {
         State {
             data,
             transitions: Vec::new(),
-            start,
             finish,
         }
     }
@@ -79,5 +75,19 @@ impl<S, T> State<S, T> {
 
     pub fn is_finish(&self) -> bool {
         self.finish
+    }
+
+    pub fn add_transition(&mut self, transition: impl Into<T>) -> &mut Self {
+        self.transitions.push(transition.into());
+        self
+    }
+
+    pub fn add_transitions<I, U>(&mut self, transitions: I) -> &mut Self
+    where
+        U: Into<T>,
+        I: Iterator<Item = U>,
+    {
+        self.transitions.extend(transitions.map(|tr| tr.into()));
+        self
     }
 }

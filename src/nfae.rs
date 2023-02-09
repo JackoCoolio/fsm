@@ -1,6 +1,10 @@
 use std::collections::HashMap;
 
-use crate::{state::State, transition::MaybeEpsilonTransition, nfa::NFA};
+use crate::{
+    nfa::NFA,
+    state::State,
+    transition::MaybeEpsilonTransition,
+};
 
 #[derive(Default)]
 pub struct NFAeBuilder<L, S>
@@ -8,7 +12,6 @@ where
     L: Copy + Clone,
 {
     start: Option<usize>,
-    finishes: Vec<usize>,
     states: Vec<State<S, MaybeEpsilonTransition<L>>>,
 }
 
@@ -18,11 +21,6 @@ where
 {
     pub fn set_start(&mut self, start: usize) -> &mut Self {
         self.start = Some(start);
-        self
-    }
-
-    pub fn add_finish(&mut self, finish: usize) -> &mut Self {
-        self.finishes.push(finish);
         self
     }
 
@@ -40,14 +38,10 @@ where
             return Err("DFA must have at least one state".into());
         }
 
-        if self.finishes.is_empty() {
-            return Err("DFA must have at least one finish".into());
-        }
+        let finish_count = self.states.iter().filter(|&st| st.is_finish()).count();
 
-        for &finish in self.finishes.iter() {
-            if finish >= self.states.len() {
-                return Err("finish index must be valid".into());
-            }
+        if finish_count == 0 {
+            return Err("DFA must have at least one finish".into());
         }
 
         if start >= self.states.len() {
@@ -56,10 +50,39 @@ where
 
         Ok(NFAe {
             start,
-            finishes: self.finishes,
             states: self.states,
         })
     }
+}
+
+impl<L, S> From<NFAe<L, S>> for NFAeBuilder<L, S>
+where
+    L: Copy + Clone,
+{
+    fn from(nfae: NFAe<L, S>) -> Self {
+        Self {
+            states: nfae.states,
+            start: Some(nfae.start),
+        }
+    }
+}
+
+#[test]
+fn test_nfae_builder() {
+    use crate::transition::RealTransition;
+
+    let mut builder = NFAeBuilder::default();
+
+    let mut start = State::new(false, ());
+    let finish = State::new(true, ());
+
+    builder.set_start(0);
+
+    start.add_transition(RealTransition::new('a', 1));
+
+    builder.add_state(start).add_state(finish);
+
+    builder.build().unwrap();
 }
 
 pub struct NFAe<L, S>
@@ -68,17 +91,12 @@ where
 {
     pub states: Vec<State<S, MaybeEpsilonTransition<L>>>,
     pub start: usize,
-    pub finishes: Vec<usize>,
 }
 
 impl<L, S> NFAe<L, S>
 where
     L: Copy + Clone,
 {
-    pub fn add_state(&mut self, start: bool, finish: bool, data: S) {
-        self.states.push(State::new(start, finish, data));
-    }
-
     pub fn get_state(&self, state: usize) -> Option<&State<S, MaybeEpsilonTransition<L>>> {
         self.states.get(state)
     }
@@ -90,12 +108,16 @@ where
         self.states.get_mut(state)
     }
 
+    pub fn get_states(&self) -> &Vec<State<S, MaybeEpsilonTransition<L>>> {
+        &self.states
+    }
+
     pub fn get_start(&self) -> &State<S, MaybeEpsilonTransition<L>> {
         self.states.get(self.start).unwrap()
     }
 
     /// Returns a list of states that can be reached from state `s` through epsilon transitions.
-    fn epsilon_closure(&self, s: usize) -> Vec<&State<S, MaybeEpsilonTransition<L>>> {
+    pub fn epsilon_closure(&self, s: usize) -> Vec<&State<S, MaybeEpsilonTransition<L>>> {
         let mut states = Vec::new();
 
         // if state is not found, no epsilon-reachable states
@@ -116,7 +138,8 @@ where
         states
     }
 
-    fn epsilon_simplify(&mut self, s: usize) {
+    /// "Steals" transitions from epsilon-reachable states and gives them to the specified state.
+    pub fn epsilon_simplify(&mut self, s: usize) {
         let epsilon_closure = self.epsilon_closure(s);
 
         if epsilon_closure.is_empty() {
@@ -129,7 +152,12 @@ where
 
         // steal transitions from epsilon-reachable states
         for epsilon_state in epsilon_closure {
-            transitions.extend(epsilon_state.transitions.iter());
+            transitions.extend(
+                epsilon_state
+                    .transitions
+                    .iter()
+                    .filter(|tr| !tr.is_epsilon()),
+            );
             // also mark current state as finish if epsilon-reachable state was finish
             if epsilon_state.is_finish() {
                 is_finish = true;
@@ -147,7 +175,16 @@ where
         state.transitions.extend(transitions);
     }
 
-    fn remove_orphan_states(&mut self) {
+    /// Calls `epsilon_simplify` on all states.
+    pub fn epsilon_simplify_all(&mut self) {
+        for i in 0..self.states.len() {
+            self.epsilon_simplify(i);
+        }
+    }
+
+    /// Removes non-start states that have no incoming transitions.
+    /// These states are unreachable.
+    pub fn remove_orphan_states(&mut self) {
         let mut reachable_states = Vec::new();
         reachable_states.push(self.start);
 
@@ -178,10 +215,9 @@ where
         }
     }
 
+    /// Converts this NFA-e into an NFA.
     pub fn into_nfa(mut self) -> NFA<L, S> {
-        for i in 0..self.states.len() {
-            self.epsilon_simplify(i);
-        }
+        self.epsilon_simplify_all();
 
         self.remove_orphan_states();
 
@@ -192,7 +228,58 @@ where
                 .map(|st| st.try_into().unwrap())
                 .collect(),
             start: self.start,
-            finishes: self.finishes,
         }
     }
+}
+
+#[test]
+fn test_convert_to_nfa() {
+    use crate::transition::RealTransition;
+
+    let mut builder = NFAeBuilder::default();
+    let mut start = State::new(false, ());
+    let mut a = State::new(false, ());
+    let mut b = State::new(false, ());
+    let mut c = State::new(false, ());
+    let d = State::new(true, ());
+
+    start
+        .add_transition(RealTransition::new('a', 1))
+        .add_transition(RealTransition::new('b', 2));
+    a.add_transition(MaybeEpsilonTransition::new_epsilon(3));
+    b.add_transition(MaybeEpsilonTransition::new_epsilon(3));
+    c.add_transition(MaybeEpsilonTransition::new_epsilon(4));
+
+    builder
+        .add_state(start)
+        .add_state(a)
+        .add_state(b)
+        .add_state(c)
+        .add_state(d);
+
+    builder.set_start(0);
+
+    let mut nfae = builder.build().unwrap();
+
+    assert!(nfae.epsilon_closure(0).len() == 1);
+    assert!(nfae.epsilon_closure(1).len() == 3);
+    assert!(nfae.epsilon_closure(2).len() == 3);
+    assert!(nfae.epsilon_closure(3).len() == 2);
+    assert!(nfae.epsilon_closure(4).len() == 1);
+
+    nfae.epsilon_simplify_all();
+
+    assert!(!nfae.get_state(0).unwrap().is_finish());
+    assert!(nfae.get_state(1).unwrap().is_finish());
+    assert!(nfae.get_state(2).unwrap().is_finish());
+    assert!(nfae.get_state(3).unwrap().is_finish());
+    assert!(nfae.get_state(4).unwrap().is_finish());
+
+    assert!(nfae.get_states().len() == 5);
+
+    nfae.remove_orphan_states();
+
+    assert_eq!(nfae.get_states().len(), 3);
+
+    let _ = nfae.into_nfa();
 }

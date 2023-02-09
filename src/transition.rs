@@ -11,6 +11,10 @@ pub struct RealTransition<L> {
 }
 
 impl<L> RealTransition<L> {
+    pub fn new(symbol: L, dest: usize) -> Self {
+        RealTransition { symbol, dest }
+    }
+
     /// Gets the symbol associated with this transition.
     #[inline]
     pub fn symbol(&self) -> &L {
@@ -44,6 +48,20 @@ pub struct MaybeEpsilonTransition<L> where L: Copy + Clone {
 }
 
 impl<L> MaybeEpsilonTransition<L> where L: Copy + Clone {
+    pub fn new_symbol(symbol: L, dest: usize) -> Self {
+        Self {
+            dest,
+            kind: MaybeEpsilonTransitionKind::Symbol(symbol),
+        }
+    }
+
+    pub fn new_epsilon(dest: usize) -> Self {
+        Self {
+            dest,
+            kind: MaybeEpsilonTransitionKind::Epsilon,
+        }
+    }
+
     /// Gets the symbol associated with this transition.
     #[inline]
     pub fn symbol(&self) -> Option<&L> {
