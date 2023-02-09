@@ -1,4 +1,4 @@
-use crate::{state::State, transition::RealTransition, nfae::NFAe};
+use crate::{nfae::NFAe, state::State, transition::RealTransition};
 
 #[derive(Default)]
 pub struct NFABuilder<L, S> {
@@ -79,7 +79,11 @@ impl<'b, L: 'b, S> NFA<L, S>
 where
     L: PartialEq,
 {
-    pub fn traverse_from<'a, I: 'b>(&'a self, from: usize, mut symbols: I) -> Vec<&State<S, RealTransition<L>>>
+    pub fn traverse_from<'a, I: 'b>(
+        &'a self,
+        from: usize,
+        mut symbols: I,
+    ) -> Vec<&State<S, RealTransition<L>>>
     where
         I: Iterator<Item = &'b L> + Clone,
     {
@@ -124,16 +128,18 @@ fn test_nfa_traverse() {
     x.add_transition(RealTransition::new('b', 3));
     y.add_transition(RealTransition::new('c', 3));
 
-    nfa
-        .add_state(start)
-        .add_state(x)
-        .add_state(y)
-        .add_state(z);
+    nfa.add_state(start).add_state(x).add_state(y).add_state(z);
 
     nfa.set_start(0);
 
     let nfa = nfa.build().unwrap();
 
-    assert!(nfa.traverse(vec!['a'].iter()).iter().map(|st| *st.data()).collect::<Vec<_>>() == vec![1, 2]);
+    assert!(
+        nfa.traverse(vec!['a'].iter())
+            .iter()
+            .map(|st| *st.data())
+            .collect::<Vec<_>>()
+            == vec![1, 2]
+    );
     assert!(nfa.traverse(vec!['a', 'b'].iter()).first().unwrap().data == 3);
 }

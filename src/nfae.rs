@@ -1,10 +1,6 @@
 use std::collections::HashMap;
 
-use crate::{
-    nfa::NFA,
-    state::State,
-    transition::MaybeEpsilonTransition,
-};
+use crate::{nfa::NFA, state::State, transition::MaybeEpsilonTransition};
 
 #[derive(Default)]
 pub struct NFAeBuilder<L, S>

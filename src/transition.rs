@@ -28,26 +28,40 @@ impl<L> RealTransition<L> {
     }
 }
 
-impl<L> TryFrom<MaybeEpsilonTransition<L>> for RealTransition<L> where L: Copy + Clone {
+impl<L> TryFrom<MaybeEpsilonTransition<L>> for RealTransition<L>
+where
+    L: Copy + Clone,
+{
     type Error = String;
 
     fn try_from(value: MaybeEpsilonTransition<L>) -> Result<Self, Self::Error> {
         let symbol = match value.kind {
-            MaybeEpsilonTransitionKind::Epsilon => return Err("transition must have a symbol".into()),
+            MaybeEpsilonTransitionKind::Epsilon => {
+                return Err("transition must have a symbol".into())
+            }
             MaybeEpsilonTransitionKind::Symbol(sym) => sym,
         };
 
-        Ok(RealTransition { symbol, dest: value.dest })
+        Ok(RealTransition {
+            symbol,
+            dest: value.dest,
+        })
     }
 }
 
 #[derive(Copy, Clone)]
-pub struct MaybeEpsilonTransition<L> where L: Copy + Clone {
+pub struct MaybeEpsilonTransition<L>
+where
+    L: Copy + Clone,
+{
     kind: MaybeEpsilonTransitionKind<L>,
     dest: usize,
 }
 
-impl<L> MaybeEpsilonTransition<L> where L: Copy + Clone {
+impl<L> MaybeEpsilonTransition<L>
+where
+    L: Copy + Clone,
+{
     pub fn new_symbol(symbol: L, dest: usize) -> Self {
         Self {
             dest,
@@ -89,7 +103,10 @@ impl<L> MaybeEpsilonTransition<L> where L: Copy + Clone {
     }
 }
 
-impl<L> From<RealTransition<L>> for MaybeEpsilonTransition<L> where L: Copy + Clone {
+impl<L> From<RealTransition<L>> for MaybeEpsilonTransition<L>
+where
+    L: Copy + Clone,
+{
     fn from(value: RealTransition<L>) -> Self {
         MaybeEpsilonTransition {
             kind: MaybeEpsilonTransitionKind::Symbol(value.symbol),
@@ -99,12 +116,18 @@ impl<L> From<RealTransition<L>> for MaybeEpsilonTransition<L> where L: Copy + Cl
 }
 
 #[derive(Copy, Clone)]
-pub enum MaybeEpsilonTransitionKind<L> where L: Copy + Clone {
+pub enum MaybeEpsilonTransitionKind<L>
+where
+    L: Copy + Clone,
+{
     Epsilon,
     Symbol(L),
 }
 
-impl<L> MaybeEpsilonTransitionKind<L> where L: Copy + Clone {
+impl<L> MaybeEpsilonTransitionKind<L>
+where
+    L: Copy + Clone,
+{
     pub fn symbol(&self) -> Option<&L> {
         match self {
             Self::Epsilon => None,
