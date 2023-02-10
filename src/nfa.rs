@@ -1,4 +1,25 @@
+use std::fmt::Display;
+
 use crate::{nfae::NFAe, state::State, transition::RealTransition};
+
+#[derive(Debug)]
+pub enum NFABuilderError {
+    MissingStartIndex,
+    MissingStates,
+    MissingFinish,
+    InvalidStartIndex,
+}
+
+impl Display for NFABuilderError {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        match self {
+            Self::MissingStartIndex => write!(f, "must specify a start index"),
+            Self::MissingStates => write!(f, "must have at least one state"),
+            Self::MissingFinish => write!(f, "must have at least one finish"),
+            Self::InvalidStartIndex => write!(f, "start index must be valid"),
+        }
+    }
+}
 
 #[derive(Default)]
 pub struct NFABuilder<L, S> {
@@ -17,22 +38,22 @@ impl<L, S> NFABuilder<L, S> {
         self
     }
 
-    pub fn build(self) -> Result<NFA<L, S>, String> {
+    pub fn build(self) -> Result<NFA<L, S>, NFABuilderError> {
         let Some(start) = self.start else {
-            return Err("must specify a start index".into());
+            return Err(NFABuilderError::MissingStartIndex);
         };
 
         if self.states.is_empty() {
-            return Err("NFA must have at least one state".into());
+            return Err(NFABuilderError::MissingStates);
         }
 
         let finish_count = self.states.iter().filter(|&st| st.is_finish()).count();
         if finish_count == 0 {
-            return Err("NFA must have at least one finish".into());
+            return Err(NFABuilderError::MissingFinish);
         }
 
         if start >= self.states.len() {
-            return Err("start index must be valid".into());
+            return Err(NFABuilderError::InvalidStartIndex);
         }
 
         Ok(NFA {

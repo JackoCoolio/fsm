@@ -1,6 +1,8 @@
 use std::collections::HashMap;
 
-use crate::{nfa::NFA, state::State, transition::MaybeEpsilonTransition};
+use crate::{nfa::{NFA, NFABuilderError}, state::State, transition::MaybeEpsilonTransition};
+
+pub type NFAeBuilderError = NFABuilderError;
 
 #[derive(Default)]
 pub struct NFAeBuilder<L, S>
@@ -21,23 +23,23 @@ impl<L, S> NFAeBuilder<L, S>
         self
     }
 
-    pub fn build(self) -> Result<NFAe<L, S>, String> {
+    pub fn build(self) -> Result<NFAe<L, S>, NFAeBuilderError> {
         let Some(start) = self.start else {
-            return Err("must specify a start index".into());
+            return Err(NFABuilderError::MissingStartIndex);
         };
 
         if self.states.is_empty() {
-            return Err("DFA must have at least one state".into());
+            return Err(NFABuilderError::MissingStates);
         }
 
         let finish_count = self.states.iter().filter(|&st| st.is_finish()).count();
 
         if finish_count == 0 {
-            return Err("DFA must have at least one finish".into());
+            return Err(NFABuilderError::MissingFinish);
         }
 
         if start >= self.states.len() {
-            return Err("start index must be valid".into());
+            return Err(NFABuilderError::InvalidStartIndex);
         }
 
         Ok(NFAe {
