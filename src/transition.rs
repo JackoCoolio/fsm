@@ -1,10 +1,3 @@
-pub trait Transition {
-    type Symbol;
-
-    fn symbol(&self) -> Self::Symbol;
-    fn dest(&self) -> usize;
-}
-
 pub struct RealTransition<L> {
     symbol: L,
     dest: usize,
