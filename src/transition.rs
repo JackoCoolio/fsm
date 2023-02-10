@@ -89,10 +89,7 @@ where
 
     /// Returns true if this transition is an epsilon transition.
     pub fn is_epsilon(&self) -> bool {
-        match self.kind {
-            MaybeEpsilonTransitionKind::Epsilon => true,
-            _ => false,
-        }
+        matches!(self.kind, MaybeEpsilonTransitionKind::Epsilon)
     }
 }
 
