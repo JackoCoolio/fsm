@@ -4,16 +4,12 @@ use crate::{nfa::NFA, state::State, transition::MaybeEpsilonTransition};
 
 #[derive(Default)]
 pub struct NFAeBuilder<L, S>
-where
-    L: Copy + Clone,
 {
     pub(crate) start: Option<usize>,
     pub(crate) states: Vec<State<S, MaybeEpsilonTransition<L>>>,
 }
 
 impl<L, S> NFAeBuilder<L, S>
-where
-    L: Copy + Clone,
 {
     pub fn set_start(&mut self, start: usize) -> &mut Self {
         self.start = Some(start);
@@ -52,8 +48,6 @@ where
 }
 
 impl<L, S> From<NFAe<L, S>> for NFAeBuilder<L, S>
-where
-    L: Copy + Clone,
 {
     fn from(nfae: NFAe<L, S>) -> Self {
         Self {
@@ -82,8 +76,6 @@ fn test_nfae_builder() {
 }
 
 pub struct NFAe<L, S>
-where
-    L: Copy + Clone,
 {
     pub(crate) states: Vec<State<S, MaybeEpsilonTransition<L>>>,
     pub(crate) start: usize,

@@ -22,8 +22,6 @@ impl<L> RealTransition<L> {
 }
 
 impl<L> TryFrom<MaybeEpsilonTransition<L>> for RealTransition<L>
-where
-    L: Copy + Clone,
 {
     type Error = String;
 
@@ -44,16 +42,12 @@ where
 
 #[derive(Copy, Clone)]
 pub struct MaybeEpsilonTransition<L>
-where
-    L: Copy + Clone,
 {
     pub kind: MaybeEpsilonTransitionKind<L>,
     pub dest: usize,
 }
 
 impl<L> MaybeEpsilonTransition<L>
-where
-    L: Copy + Clone,
 {
     pub fn new_symbol(symbol: L, dest: usize) -> Self {
         Self {
@@ -94,8 +88,6 @@ where
 }
 
 impl<L> From<RealTransition<L>> for MaybeEpsilonTransition<L>
-where
-    L: Copy + Clone,
 {
     fn from(value: RealTransition<L>) -> Self {
         MaybeEpsilonTransition {
@@ -107,16 +99,12 @@ where
 
 #[derive(Copy, Clone)]
 pub enum MaybeEpsilonTransitionKind<L>
-where
-    L: Copy + Clone,
 {
     Epsilon,
     Symbol(L),
 }
 
 impl<L> MaybeEpsilonTransitionKind<L>
-where
-    L: Copy + Clone,
 {
     pub fn symbol(&self) -> Option<&L> {
         match self {

@@ -10,8 +10,6 @@ pub struct State<S, T> {
 }
 
 impl<L, S> TryFrom<State<S, MaybeEpsilonTransition<L>>> for State<S, RealTransition<L>>
-where
-    L: Copy + Clone,
 {
     type Error = <RealTransition<L> as TryFrom<MaybeEpsilonTransition<L>>>::Error;
 
@@ -33,8 +31,6 @@ where
 }
 
 impl<L, S> From<State<S, RealTransition<L>>> for State<S, MaybeEpsilonTransition<L>>
-where
-    L: Copy + Clone,
 {
     fn from(value: State<S, RealTransition<L>>) -> Self {
         State {
