@@ -21,8 +21,7 @@ impl<L> RealTransition<L> {
     }
 }
 
-impl<L> TryFrom<MaybeEpsilonTransition<L>> for RealTransition<L>
-{
+impl<L> TryFrom<MaybeEpsilonTransition<L>> for RealTransition<L> {
     type Error = String;
 
     fn try_from(value: MaybeEpsilonTransition<L>) -> Result<Self, Self::Error> {
@@ -41,14 +40,12 @@ impl<L> TryFrom<MaybeEpsilonTransition<L>> for RealTransition<L>
 }
 
 #[derive(Copy, Clone)]
-pub struct MaybeEpsilonTransition<L>
-{
+pub struct MaybeEpsilonTransition<L> {
     pub kind: MaybeEpsilonTransitionKind<L>,
     pub dest: usize,
 }
 
-impl<L> MaybeEpsilonTransition<L>
-{
+impl<L> MaybeEpsilonTransition<L> {
     pub fn new_symbol(symbol: L, dest: usize) -> Self {
         Self {
             dest,
@@ -87,8 +84,7 @@ impl<L> MaybeEpsilonTransition<L>
     }
 }
 
-impl<L> From<RealTransition<L>> for MaybeEpsilonTransition<L>
-{
+impl<L> From<RealTransition<L>> for MaybeEpsilonTransition<L> {
     fn from(value: RealTransition<L>) -> Self {
         MaybeEpsilonTransition {
             kind: MaybeEpsilonTransitionKind::Symbol(value.symbol),
@@ -98,14 +94,12 @@ impl<L> From<RealTransition<L>> for MaybeEpsilonTransition<L>
 }
 
 #[derive(Copy, Clone)]
-pub enum MaybeEpsilonTransitionKind<L>
-{
+pub enum MaybeEpsilonTransitionKind<L> {
     Epsilon,
     Symbol(L),
 }
 
-impl<L> MaybeEpsilonTransitionKind<L>
-{
+impl<L> MaybeEpsilonTransitionKind<L> {
     pub fn symbol(&self) -> Option<&L> {
         match self {
             Self::Epsilon => None,

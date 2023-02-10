@@ -1,18 +1,20 @@
 use std::collections::HashMap;
 
-use crate::{nfa::{NFA, NFABuilderError}, state::State, transition::MaybeEpsilonTransition};
+use crate::{
+    nfa::{NFABuilderError, NFA},
+    state::State,
+    transition::MaybeEpsilonTransition,
+};
 
 pub type NFAeBuilderError = NFABuilderError;
 
 #[derive(Default)]
-pub struct NFAeBuilder<L, S>
-{
+pub struct NFAeBuilder<L, S> {
     pub(crate) start: Option<usize>,
     pub(crate) states: Vec<State<S, MaybeEpsilonTransition<L>>>,
 }
 
-impl<L, S> NFAeBuilder<L, S>
-{
+impl<L, S> NFAeBuilder<L, S> {
     pub fn set_start(&mut self, start: usize) -> &mut Self {
         self.start = Some(start);
         self
@@ -49,8 +51,7 @@ impl<L, S> NFAeBuilder<L, S>
     }
 }
 
-impl<L, S> From<NFAe<L, S>> for NFAeBuilder<L, S>
-{
+impl<L, S> From<NFAe<L, S>> for NFAeBuilder<L, S> {
     fn from(nfae: NFAe<L, S>) -> Self {
         Self {
             states: nfae.states,
@@ -77,8 +78,7 @@ fn test_nfae_builder() {
     builder.build().unwrap();
 }
 
-pub struct NFAe<L, S>
-{
+pub struct NFAe<L, S> {
     pub(crate) states: Vec<State<S, MaybeEpsilonTransition<L>>>,
     pub(crate) start: usize,
 }

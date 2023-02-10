@@ -9,8 +9,7 @@ pub struct State<S, T> {
     pub finish: bool,
 }
 
-impl<L, S> TryFrom<State<S, MaybeEpsilonTransition<L>>> for State<S, RealTransition<L>>
-{
+impl<L, S> TryFrom<State<S, MaybeEpsilonTransition<L>>> for State<S, RealTransition<L>> {
     type Error = <RealTransition<L> as TryFrom<MaybeEpsilonTransition<L>>>::Error;
 
     fn try_from(value: State<S, MaybeEpsilonTransition<L>>) -> Result<Self, Self::Error> {
@@ -30,8 +29,7 @@ impl<L, S> TryFrom<State<S, MaybeEpsilonTransition<L>>> for State<S, RealTransit
     }
 }
 
-impl<L, S> From<State<S, RealTransition<L>>> for State<S, MaybeEpsilonTransition<L>>
-{
+impl<L, S> From<State<S, RealTransition<L>>> for State<S, MaybeEpsilonTransition<L>> {
     fn from(value: State<S, RealTransition<L>>) -> Self {
         State {
             data: value.data,
