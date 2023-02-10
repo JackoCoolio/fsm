@@ -7,8 +7,8 @@ pub struct NFAeBuilder<L, S>
 where
     L: Copy + Clone,
 {
-    start: Option<usize>,
-    states: Vec<State<S, MaybeEpsilonTransition<L>>>,
+    pub(crate) start: Option<usize>,
+    pub(crate) states: Vec<State<S, MaybeEpsilonTransition<L>>>,
 }
 
 impl<L, S> NFAeBuilder<L, S>
@@ -85,8 +85,8 @@ pub struct NFAe<L, S>
 where
     L: Copy + Clone,
 {
-    pub states: Vec<State<S, MaybeEpsilonTransition<L>>>,
-    pub start: usize,
+    pub(crate) states: Vec<State<S, MaybeEpsilonTransition<L>>>,
+    pub(crate) start: usize,
 }
 
 impl<L, S> NFAe<L, S>

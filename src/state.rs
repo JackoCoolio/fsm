@@ -4,7 +4,7 @@ pub struct State<S, T> {
     /// Arbitrary user data held by this state.
     pub data: S,
     /// The transitions from this state.
-    pub transitions: Vec<T>,
+    pub(crate) transitions: Vec<T>,
     /// Whether or not this state is a finish state.
     pub finish: bool,
 }
@@ -67,10 +67,6 @@ impl<S, T> State<S, T> {
             transitions: Vec::new(),
             finish,
         }
-    }
-
-    pub fn data(&self) -> &S {
-        &self.data
     }
 
     pub fn is_finish(&self) -> bool {

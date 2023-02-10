@@ -1,6 +1,6 @@
 pub struct RealTransition<L> {
-    symbol: L,
-    dest: usize,
+    pub symbol: L,
+    pub dest: usize,
 }
 
 impl<L> RealTransition<L> {
@@ -47,8 +47,8 @@ pub struct MaybeEpsilonTransition<L>
 where
     L: Copy + Clone,
 {
-    kind: MaybeEpsilonTransitionKind<L>,
-    dest: usize,
+    pub kind: MaybeEpsilonTransitionKind<L>,
+    pub dest: usize,
 }
 
 impl<L> MaybeEpsilonTransition<L>

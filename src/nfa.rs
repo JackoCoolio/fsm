@@ -2,8 +2,8 @@ use crate::{nfae::NFAe, state::State, transition::RealTransition};
 
 #[derive(Default)]
 pub struct NFABuilder<L, S> {
-    pub states: Vec<State<S, RealTransition<L>>>,
-    pub start: Option<usize>,
+    pub(crate) states: Vec<State<S, RealTransition<L>>>,
+    pub(crate) start: Option<usize>,
 }
 
 impl<L, S> NFABuilder<L, S> {
@@ -52,8 +52,8 @@ impl<L, S> From<NFA<L, S>> for NFABuilder<L, S> {
 }
 
 pub struct NFA<L, S> {
-    pub states: Vec<State<S, RealTransition<L>>>,
-    pub start: usize,
+    pub(crate) states: Vec<State<S, RealTransition<L>>>,
+    pub(crate) start: usize,
 }
 
 impl<L, S> From<NFAe<L, S>> for NFA<L, S>
@@ -137,7 +137,7 @@ fn test_nfa_traverse() {
     assert!(
         nfa.traverse(vec!['a'].iter())
             .iter()
-            .map(|st| *st.data())
+            .map(|st| st.data)
             .collect::<Vec<_>>()
             == vec![1, 2]
     );
