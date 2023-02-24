@@ -83,10 +83,7 @@ pub struct NFAe<L, S> {
     pub(crate) start: usize,
 }
 
-impl<L, S> NFAe<L, S>
-where
-    L: Copy + Clone,
-{
+impl<L, S> NFAe<L, S> {
     pub fn get_state(&self, state: usize) -> Option<&State<S, MaybeEpsilonTransition<L>>> {
         self.states.get(state)
     }
@@ -128,50 +125,6 @@ where
         states
     }
 
-    /// "Steals" transitions from epsilon-reachable states and gives them to the specified state.
-    pub fn epsilon_simplify(&mut self, s: usize) {
-        let epsilon_closure = self.epsilon_closure(s);
-
-        if epsilon_closure.is_empty() {
-            return;
-        }
-
-        let mut transitions: Vec<MaybeEpsilonTransition<L>> = Vec::new();
-
-        let mut is_finish = self.get_state(s).unwrap().is_finish();
-
-        // steal transitions from epsilon-reachable states
-        for epsilon_state in epsilon_closure {
-            transitions.extend(
-                epsilon_state
-                    .transitions
-                    .iter()
-                    .filter(|tr| !tr.is_epsilon()),
-            );
-            // also mark current state as finish if epsilon-reachable state was finish
-            if epsilon_state.is_finish() {
-                is_finish = true;
-            }
-        }
-
-        let state = self.get_state_mut(s).unwrap();
-
-        state.finish = is_finish;
-
-        // remove epsilon transitions now
-        state.transitions.retain(|tr| !tr.is_epsilon());
-
-        // add on stolen transitions
-        state.transitions.extend(transitions);
-    }
-
-    /// Calls `epsilon_simplify` on all states.
-    pub fn epsilon_simplify_all(&mut self) {
-        for i in 0..self.states.len() {
-            self.epsilon_simplify(i);
-        }
-    }
-
     /// Removes non-start states that have no incoming transitions.
     /// These states are unreachable.
     pub fn remove_orphan_states(&mut self) {
@@ -203,6 +156,55 @@ where
                 transition.set_dest(*new_dest);
             }
         }
+    }
+}
+
+impl<L, S> NFAe<L, S>
+where
+    L: Clone,
+{
+    /// Calls `epsilon_simplify` on all states.
+    pub fn epsilon_simplify_all(&mut self) {
+        for i in 0..self.states.len() {
+            self.epsilon_simplify(i);
+        }
+    }
+
+    /// "Steals" transitions from epsilon-reachable states and gives them to the specified state.
+    pub fn epsilon_simplify(&mut self, s: usize) {
+        let epsilon_closure = self.epsilon_closure(s);
+
+        if epsilon_closure.is_empty() {
+            return;
+        }
+
+        let mut transitions: Vec<MaybeEpsilonTransition<L>> = Vec::new();
+
+        let mut is_finish = self.get_state(s).unwrap().is_finish();
+
+        // steal transitions from epsilon-reachable states
+        for epsilon_state in epsilon_closure {
+            let new_transitions = epsilon_state
+                .transitions
+                .iter()
+                .cloned()
+                .filter(|tr| !tr.is_epsilon());
+            transitions.extend(new_transitions);
+            // also mark current state as finish if epsilon-reachable state was finish
+            if epsilon_state.is_finish() {
+                is_finish = true;
+            }
+        }
+
+        let state = self.get_state_mut(s).unwrap();
+
+        state.finish = is_finish;
+
+        // remove epsilon transitions now
+        state.transitions.retain(|tr| !tr.is_epsilon());
+
+        // add on stolen transitions
+        state.transitions.extend(transitions);
     }
 
     /// Converts this NFA-e into an NFA.

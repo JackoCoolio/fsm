@@ -79,7 +79,7 @@ pub struct NFA<L, S> {
 
 impl<L, S> From<NFAe<L, S>> for NFA<L, S>
 where
-    L: Copy + Clone,
+    L: Clone,
 {
     fn from(value: NFAe<L, S>) -> Self {
         value.into_nfa()
